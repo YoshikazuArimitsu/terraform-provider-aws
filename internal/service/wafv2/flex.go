@@ -392,7 +392,7 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 	}
 
 	if v, ok := m["body"]; ok && len(v.([]interface{})) > 0 {
-		f.Body = &wafv2.Body{}
+		f.Body = expandBody(m["body"].([]interface{}))
 	}
 
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
@@ -416,6 +416,18 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 	}
 
 	return f
+}
+
+func expandBody(l []interface{}) *wafv2.Body {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.Body{
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
+	}
 }
 
 func expandForwardedIPConfig(l []interface{}) *wafv2.ForwardedIPConfig {
@@ -925,7 +937,7 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 	}
 
 	if f.Body != nil {
-		m["body"] = make([]map[string]interface{}, 1)
+		m["body"] = flattenBody(f.Body)
 	}
 
 	if f.Method != nil {
@@ -946,6 +958,18 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 
 	if f.UriPath != nil {
 		m["uri_path"] = make([]map[string]interface{}, 1)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBody(s *wafv2.Body) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"oversize_handling": aws.StringValue(s.OversizeHandling),
 	}
 
 	return []interface{}{m}
